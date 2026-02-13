@@ -32,5 +32,5 @@ public interface ReservationService {
      * Récupère tous les reservation du système
      * @return la liste des reservation
      */
-    List<ReservationDto> getAllReservation();
+    List<ReservationDto> getAllReservations();
 }
