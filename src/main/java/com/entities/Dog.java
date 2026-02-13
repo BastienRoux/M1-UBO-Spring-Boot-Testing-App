@@ -17,6 +17,6 @@ public class Dog {
 	private Long Id;
 	private String name;
 	private String race;
-	private LocalDate birthDate;	
-	
+	private LocalDate birthDate;
+
 }

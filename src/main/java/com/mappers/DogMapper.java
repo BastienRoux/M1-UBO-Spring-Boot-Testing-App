@@ -3,7 +3,6 @@ package com.mappers;
 import com.dtos.DogDto;
 import com.entities.Dog;
 import org.springframework.stereotype.Component;
-import java.util.Objects;
 
 /**
  * Mapper responsable de la conversion entre les entités Dog et les DTOs DogDto.
