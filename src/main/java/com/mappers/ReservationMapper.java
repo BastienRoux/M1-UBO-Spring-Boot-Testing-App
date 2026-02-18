@@ -1,9 +1,8 @@
 package com.mappers;
 
-import com.dtos.DogDto;
 import com.dtos.ReservationDto;
-import com.entities.Dog;
 import com.entities.Reservation;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,8 +21,8 @@ public class ReservationMapper {
         }
 
         ReservationDto reservationDto = new ReservationDto();
-        ReservationDto.setId(reservation.getId());
-        ReservationDto.setName(reservation.getName());
+        reservationDto.setId(reservation.getId());
+        reservationDto.setName(reservation.getName());
         return reservationDto;
     }
 
@@ -35,18 +34,18 @@ public class ReservationMapper {
      * @param reservationDto le DTO à convertir
      * @return l'entité correspondante ou null si le DTO est null
      */
-    public Dog toEntity(ReservationDto reservationDto) {
+    public Reservation toEntity(ReservationDto reservationDto) {
         if (reservationDto == null) {
             return null;
         }
 
-        Dog dog = new Dog();
+        Reservation reservation = new Reservation();
         // On ne set l'ID que s'il existe (cas d'une mise à jour)
         if (reservationDto.getId() != null) {
-            dog.setId(reservationDto.getId());
+            reservation.setId(reservationDto.getId());
         }
-        dog.setName(reservationDto.getName());
-        return dog;
+        reservation.setName(reservationDto.getName());
+        return reservation;
     }
 
 }
