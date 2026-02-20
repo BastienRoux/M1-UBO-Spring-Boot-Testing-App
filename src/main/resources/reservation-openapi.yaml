@@ -1,0 +1,142 @@
+openapi: 3.1.0
+info:
+  title: reservations-api
+  description: API pour la réservation d'un film.
+  version: 1.0.0
+
+paths:
+  /reservations:
+    post:
+      summary: Ajouter une réservation
+      description: Ajoute une réservation à la BDD.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+      responses:
+        '201':
+          description: Réservation créée avec succès
+        '400':
+          description: Requête invalide
+
+  /reservations/u/{id_utilisateur}:
+    get:
+      summary: Obtenir la liste de réservations d'un utilisateur dont l'identifiant est passé en paramètre
+      description: Renvoie une réservation spécifique identifiée par son identifiant.
+      parameters:
+        - name: id_utilisateur
+          in: path
+          required: true
+          description: L'identifiant de l'auteur de la réservation.
+          schema:
+            type: string
+      reponses:
+        '200':
+          description: Liste des réservations de l'auteur
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+        '404':
+          description: Pas de réservation pour l'identifiant utilisateur fourni
+  /reservations/{id_reservation}:
+    get:
+      summary: Trouver une réservation par son identifiant
+      description: Renvoie une réservation spécifique identifiée par son identifiant.
+      parameters:
+        - name: id_reservation
+          in: path
+          required: true
+          description: L'identifiant de la réservation à trouver.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Détails d'une réservation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '404':
+          description: Réservation non trouvée
+    put:
+      summary: Mettre à jour une réservation
+      description: Met à jour les informations d'une réservation.
+      parameters:
+        - name: id_reservation
+          in: path
+          required: true
+          description: L'identifiant de la réservation à mettre à jour.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+      responses:
+        '200':
+          description: Réservation mise à jour avec succès
+        '404':
+          description: Réservation non trouvée
+        '400':
+          description: Requête invalide
+    delete:
+      summary: Supprimer une réservation
+      description: Supprime une réservation spécifique. (vraiment utile ?)
+      parameters:
+        - name: id_reservation
+          in: path
+          required: true
+          description: L'identifiant de la réservation à supprimer.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Réservation supprimée avec succès
+        '404':
+          description: Réservation non trouvée
+
+components:
+  schemas:
+    Reservation:
+      type: object
+      required:
+        - id_reservation
+        - date_debut
+        - date_fin
+        - id_film
+        - id_paiement
+        - pseudo
+      properties:
+        idReservation:
+          type: integer
+          examples: [100]
+          description: L'identifiant de la réservation.
+        dateDebut:
+          type: string
+          examples: ['2026-01-27']
+          format: date
+          description: La date de début de la réservation.
+        dateFin:
+          type: string
+          examples: ['2026-01-29']
+          format: date
+          description: La date de fin de la réservation.
+        id_film:
+          type: integer
+          examples: [64]
+          description : L'identifiant du film associé à la réservation.
+        id_paiement:
+          type: integer
+          examples: [3011]
+          description: L'identifiant du paiement associé à la réservation.
+        id_utilisateur:
+          type: integer
+          examples: [156]
+          description: L'identifiant de l'utilisateur qui a passé la réservation.
