@@ -1,6 +1,5 @@
 package com.services;
 
-import com.dtos.DogDto;
 import com.dtos.ReservationDto;
 
 import java.util.List;

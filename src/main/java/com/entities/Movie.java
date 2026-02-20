@@ -1,10 +1,10 @@
 package com.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Data
@@ -16,4 +16,13 @@ public class Movie {
     private String title;
     private Integer releaseYear;
     private String director;
+    
+    // Relation Many-to-Many avec Artist via une table de jointure
+    @ManyToMany
+    @JoinTable(
+        name = "movie_artist",
+        joinColumns = @JoinColumn(name = "movie_id"),
+        inverseJoinColumns = @JoinColumn(name = "artist_id")
+    )
+    private Set<Artist> artists = new HashSet<>();
 }
