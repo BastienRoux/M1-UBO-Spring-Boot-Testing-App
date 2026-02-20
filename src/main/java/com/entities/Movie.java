@@ -11,8 +11,9 @@ import lombok.Data;
 public class Movie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Integer id;
-    public String title;
-    public Integer releaseYear;
-    public String director;
+    private Integer id;
+
+    private String title;
+    private Integer releaseYear;
+    private String director;
 }

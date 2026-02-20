@@ -1,53 +1,48 @@
 package com.controllers;
 
-import com.dtos.DogDto;
+import com.dtos.MovieDto;
+import com.services.MovieService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import com.services.impl.DogServiceImpl;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/movie")
+@RequestMapping("/movies") // Pluriel comme demandé dans l'OpenAPI
 public class MovieController {
 
-    private final movieServiceImpl movieService;
+    private final MovieService movieService; // Toujours injecter l'interface et non l'implémentation !
 
-    public MovieController(MovieServiceImpl movieService) {
+    public MovieController(MovieService movieService) {
         this.movieService = movieService;
     }
 
-    /**
-     * <p>Get all movie in the system</p>
-     * @return List<MovieDto>
-     */
     @GetMapping
-    public List<MovieDto> getMovie() {
-        return movieService.getAllMovie();
+    public ResponseEntity<List<MovieDto>> getMovies() {
+        return ResponseEntity.ok(movieService.getAllMovie());
     }
 
-    /**
-     * Method to get the movie based on the ID
-     */
     @GetMapping("/{id}")
-    public MovieDto getMovie(@PathVariable Integer id){
-        return movieService.getMovieById(id);
+    public ResponseEntity<MovieDto> getMovie(@PathVariable Integer id){
+        return ResponseEntity.ok(movieService.getMovieById(id));
     }
 
-    /**
-     * Create a new Movie in the system
-     */
     @PostMapping
-    public MovieDto saveMovie(final @RequestBody MovieDto movieDto){
-        return movieService.saveMovie(movieDto);
+    public ResponseEntity<MovieDto> saveMovie(@RequestBody MovieDto movieDto){
+        // Retourne un statut 201 Created pour la création
+        return ResponseEntity.status(HttpStatus.CREATED).body(movieService.saveMovie(movieDto));
     }
 
-    /**
-     * Delete a movie by it's id
-     */
+    @PutMapping("/{id}")
+    public ResponseEntity<MovieDto> updateMovie(@PathVariable Integer id, @RequestBody MovieDto movieDto){
+        return ResponseEntity.ok(movieService.updateMovie(id, movieDto));
+    }
+
     @DeleteMapping("/{id}")
-    public Boolean deleteMovie(@PathVariable Integer id){
-        return movieService.deleteMovie(id);
+    public ResponseEntity<Void> deleteMovie(@PathVariable Integer id){
+        movieService.deleteMovie(id);
+        // Retourne un 204 No Content en cas de succès, parfait pour une suppression
+        return ResponseEntity.noContent().build();
     }
-
 }
