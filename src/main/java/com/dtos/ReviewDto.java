@@ -24,4 +24,8 @@ public class ReviewDto {
 	
 	private LocalDateTime createdAt;
 	
+	// IDs pour les pseudo-jointures
+	private Long movieId;
+	private Long userId;
+	
 }

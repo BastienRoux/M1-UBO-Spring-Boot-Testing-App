@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  # Base de données SQL pour les films et réservations
+  mariadb:
+    image: mariadb:latest
+    container_name: vod-mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: vod_db
+      MYSQL_USER: vod_user
+      MYSQL_PASSWORD: vod_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - vod-network
+
+  # Base de données MongoDB pour les affiches et évaluations
+  mongodb:
+    image: mongo:latest
+    container_name: vod-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin_password
+      MONGO_INITDB_DATABASE: vod_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - vod-network
+
+  # Service Films et Réservations (Spring Boot)
+  film-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vod-film-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/vod_db
+      SPRING_DATASOURCE_USERNAME: vod_user
+      SPRING_DATASOURCE_PASSWORD: vod_password
+    ports:
+      - "12082:12082"
+    depends_on:
+      - mariadb
+    networks:
+      - vod-network
+
+  # Service Evaluations (Servlet - à implémenter)
+  evaluation-service:
+    # build:
+    #   context: ./evaluation-service
+    #   dockerfile: Dockerfile
+    # container_name: vod-evaluation-service
+    # environment:
+    #   MONGO_URI: mongodb://admin:admin_password@mongodb:27017/vod_mongo?authSource=admin
+    # ports:
+    #   - "12083:12083"
+    # depends_on:
+    #   - mongodb
+    # networks:
+    #   - vod-network
+    image: busybox
+    command: echo "Evaluation service not yet implemented"
+
+  # Service Affiches (Servlet - à implémenter)
+  poster-service:
+    # build:
+    #   context: ./poster-service
+    #   dockerfile: Dockerfile
+    # container_name: vod-poster-service
+    # environment:
+    #   MONGO_URI: mongodb://admin:admin_password@mongodb:27017/vod_mongo?authSource=admin
+    # ports:
+    #   - "12084:12084"
+    # depends_on:
+    #   - mongodb
+    # networks:
+    #   - vod-network
+    image: busybox
+    command: echo "Poster service not yet implemented"
+
+  # Service Paiement (Spring Boot - à implémenter)
+  payment-service:
+    # build:
+    #   context: ./payment-service
+    #   dockerfile: Dockerfile
+    # container_name: vod-payment-service
+    # ports:
+    #   - "12085:12085"
+    # networks:
+    #   - vod-network
+    image: busybox
+    command: echo "Payment service not yet implemented"
+
+  # API Gateway (Spring Cloud Gateway)
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: vod-api-gateway
+    ports:
+      - "12081:12081"
+    depends_on:
+      - film-service
+    networks:
+      - vod-network
+
+volumes:
+  mariadb_data:
+  mongodb_data:
+
+networks:
+  vod-network:
+    driver: bridge

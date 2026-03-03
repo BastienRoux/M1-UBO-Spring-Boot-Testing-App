@@ -9,4 +9,10 @@ public interface MovieService {
     boolean deleteMovie(Integer movieId);
     List<MovieDto> getAllMovie();
     MovieDto updateMovie(Integer movieId, MovieDto movieDto);
+    
+    // Gestion des artistes
+    MovieDto addArtistToMovie(Integer movieId, Long artistId);
+    MovieDto removeArtistFromMovie(Integer movieId, Long artistId);
+    MovieDto updateMovieArtists(Integer movieId, List<Long> artistIds);
+    List<MovieDto> getMoviesByArtist(Long artistId);
 }

@@ -41,12 +41,30 @@ public class ReservationController {
     }
 
     /**
-     * Delete a Reservation by it's id
+     * Cancel a Reservation by it's id (set endedAt and status to ENDED)
      */
     @DeleteMapping("/{id}")
     public Boolean deleteReservation(@PathVariable Long id){
         return reservationService.deleteReservation(id);
     }
-
-
+	
+	/**
+	 * Obtenir toutes les réservations d'un film (pseudo-jointure)
+	 * @param movieId L'identifiant du film
+	 * @return Liste des réservations du film
+	 */
+	@GetMapping("/movie/{movieId}")
+	public List<ReservationDto> getReservationsByMovieId(@PathVariable Long movieId) {
+		return reservationService.getReservationsByMovieId(movieId);
+	}
+	
+	/**
+	 * Obtenir toutes les réservations d'un utilisateur (pseudo-jointure)
+	 * @param userId L'identifiant de l'utilisateur
+	 * @return Liste des réservations de l'utilisateur
+	 */
+	@GetMapping("/user/{userId}")
+	public List<ReservationDto> getReservationsByUserId(@PathVariable Long userId) {
+		return reservationService.getReservationsByUserId(userId);
+	}
 }

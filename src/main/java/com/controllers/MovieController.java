@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/movies") // Pluriel comme demandé dans l'OpenAPI
+@RequestMapping("/films") // Utiliser /films pour être cohérent avec le frontend
 public class MovieController {
 
     private final MovieService movieService; // Toujours injecter l'interface et non l'implémentation !
@@ -44,5 +44,45 @@ public class MovieController {
         movieService.deleteMovie(id);
         // Retourne un 204 No Content en cas de succès, parfait pour une suppression
         return ResponseEntity.noContent().build();
+    }
+    
+    // ===== Gestion des artistes d'un film =====
+    
+    /**
+     * Ajouter un artiste à un film
+     */
+    @PostMapping("/{movieId}/artists/{artistId}")
+    public ResponseEntity<MovieDto> addArtistToMovie(
+            @PathVariable Integer movieId,
+            @PathVariable Long artistId) {
+        return ResponseEntity.ok(movieService.addArtistToMovie(movieId, artistId));
+    }
+    
+    /**
+     * Retirer un artiste d'un film
+     */
+    @DeleteMapping("/{movieId}/artists/{artistId}")
+    public ResponseEntity<MovieDto> removeArtistFromMovie(
+            @PathVariable Integer movieId,
+            @PathVariable Long artistId) {
+        return ResponseEntity.ok(movieService.removeArtistFromMovie(movieId, artistId));
+    }
+    
+    /**
+     * Mettre à jour la liste complète des artistes d'un film
+     */
+    @PutMapping("/{movieId}/artists")
+    public ResponseEntity<MovieDto> updateMovieArtists(
+            @PathVariable Integer movieId,
+            @RequestBody List<Long> artistIds) {
+        return ResponseEntity.ok(movieService.updateMovieArtists(movieId, artistIds));
+    }
+    
+    /**
+     * Récupérer les films d'un artiste
+     */
+    @GetMapping("/artist/{artistId}")
+    public ResponseEntity<List<MovieDto>> getMoviesByArtist(@PathVariable Long artistId) {
+        return ResponseEntity.ok(movieService.getMoviesByArtist(artistId));
     }
 }
