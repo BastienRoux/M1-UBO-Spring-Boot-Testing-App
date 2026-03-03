@@ -45,4 +45,18 @@ public interface ReviewService {
 	 * @return la liste des avis
 	 */
 	List<ReviewDto> getAllReviews();
+	
+	/**
+	 * Récupère tous les avis d'un film (pseudo-jointure)
+	 * @param movieId l'identifiant du film
+	 * @return la liste des avis du film
+	 */
+	List<ReviewDto> getReviewsByMovieId(Long movieId);
+	
+	/**
+	 * Récupère tous les avis d'un utilisateur (pseudo-jointure)
+	 * @param userId l'identifiant de l'utilisateur
+	 * @return la liste des avis de l'utilisateur
+	 */
+	List<ReviewDto> getReviewsByUserId(Long userId);
 }

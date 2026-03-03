@@ -34,6 +34,15 @@ public class ReviewMapper {
 		reviewDto.setRating(review.getRating());
 		reviewDto.setComment(review.getComment());
 		reviewDto.setCreatedAt(review.getCreatedAt());
+		
+		// Mapper les IDs des pseudo-jointures
+		if (review.getMovie() != null) {
+			reviewDto.setMovieId(Long.valueOf(review.getMovie().getId()));
+		}
+		if (review.getUser() != null) {
+			reviewDto.setUserId(review.getUser().getId());
+		}
+		
 		return reviewDto;
 	}
 

@@ -4,6 +4,8 @@ import com.services.ReservationService;
 import com.dtos.ReservationDto;
 import com.mappers.ReservationMapper;
 import com.repositories.ReservationRepository;
+import com.repositories.MovieRepository;
+import com.repositories.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,8 @@ public class ReservationServiceImpl implements ReservationService{
 
     private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
+    private final MovieRepository movieRepository;
+    private final UserRepository userRepository;
 
     /**
      * Constructeur avec injection des dépendances
@@ -25,9 +29,12 @@ public class ReservationServiceImpl implements ReservationService{
      * - Elle facilite les tests unitaires
      * - Elle permet l'immutabilité
      */
-    public ReservationServiceImpl(ReservationRepository reservationRepository, ReservationMapper reservationMapper) {
+    public ReservationServiceImpl(ReservationRepository reservationRepository, ReservationMapper reservationMapper,
+                                  MovieRepository movieRepository, UserRepository userRepository) {
         this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
+        this.movieRepository = movieRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -37,6 +44,40 @@ public class ReservationServiceImpl implements ReservationService{
     @Override
     public ReservationDto saveReservation(ReservationDto reservationDto) {
         var reservation = reservationMapper.toEntity(reservationDto);
+        
+        // Pseudo-jointure : lier le Movie via son ID si fourni
+        if (reservationDto.getMovieId() != null) {
+            var movie = movieRepository.findById(reservationDto.getMovieId().intValue())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            String.format("Le film avec l'ID %d n'existe pas", reservationDto.getMovieId())));
+            reservation.setMovie(movie);
+        }
+        
+        // Pseudo-jointure : lier l'User via son ID si fourni
+        if (reservationDto.getUserId() != null) {
+            var user = userRepository.findById(reservationDto.getUserId())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            String.format("L'utilisateur avec l'ID %d n'existe pas", reservationDto.getUserId())));
+            reservation.setUser(user);
+            
+            // Vérifier si une réservation active existe déjà pour ce film et cet utilisateur
+            if (reservationDto.getMovieId() != null) {
+                var existingReservation = reservationRepository.findByMovieIdAndUserIdAndStatus(
+                    reservationDto.getMovieId(), reservationDto.getUserId(), "ACTIVE");
+                if (existingReservation.isPresent()) {
+                    throw new IllegalStateException(
+                        String.format("Vous avez déjà une réservation active pour ce film"));
+                }
+            }
+            
+            // Vérifier la limite de 3 réservations actives
+            long activeCount = reservationRepository.countByUserIdAndStatus(reservationDto.getUserId(), "ACTIVE");
+            if (activeCount >= 3) {
+                throw new IllegalStateException(
+                    "Vous avez atteint la limite de 3 réservations actives. Veuillez en annuler une avant d'en créer une nouvelle.");
+            }
+        }
+        
         var savedReservation = reservationRepository.save(reservation);
         return reservationMapper.toDto(savedReservation);
     }
@@ -56,11 +97,17 @@ public class ReservationServiceImpl implements ReservationService{
 
     /**
      * {@inheritDoc}
-     * La méthode deleteById ne lève pas d'exception si l'entité n'existe pas
+     * Annule la réservation en ajoutant la date de fin et en changeant le statut
      */
     @Override
     public boolean deleteReservation(Long reservationId) {
-        reservationRepository.deleteById(reservationId);
+        var reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        String.format("La réservation avec l'ID %d n'existe pas", reservationId)));
+        
+        reservation.setEndedAt(java.time.LocalDateTime.now());
+        reservation.setStatus("ENDED");
+        reservationRepository.save(reservation);
         return true;
     }
 
@@ -75,4 +122,28 @@ public class ReservationServiceImpl implements ReservationService{
                 .map(reservationMapper::toDto)
                 .toList();
     }
+	
+	/**
+	 * {@inheritDoc}
+	 * Recherche toutes les réservations d'un film (pseudo-jointure)
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public List<ReservationDto> getReservationsByMovieId(Long movieId) {
+		return reservationRepository.findByMovieId(movieId).stream()
+				.map(reservationMapper::toDto)
+				.toList();
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * Recherche toutes les réservations d'un utilisateur (pseudo-jointure)
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public List<ReservationDto> getReservationsByUserId(Long userId) {
+		return reservationRepository.findByUserId(userId).stream()
+				.map(reservationMapper::toDto)
+				.toList();
+	}
 }

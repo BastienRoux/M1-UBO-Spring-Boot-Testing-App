@@ -67,34 +67,49 @@ export const artistService = {
 export const reservationService = {
   // Récupérer mes réservations
   getMyReservations() {
-    return api.get('/reservations/my')
+    return api.get('/reservations/user/1') // TODO: Récupérer l'ID de l'utilisateur connecté
   },
 
   // Créer une réservation
   createReservation(filmId) {
-    return api.post('/reservations', { filmId })
+    return api.post('/reservations', { 
+      name: 'Reservation',
+      movieId: filmId,
+      userId: 1, // TODO: Récupérer l'ID de l'utilisateur connecté
+      date: new Date().toISOString().split('T')[0],
+      status: 'ACTIVE'
+    })
   },
 
-  // Terminer une réservation
+  // Terminer/Annuler une réservation
   endReservation(id) {
-    return api.patch(`/reservations/${id}/end`)
+    return api.delete(`/reservations/${id}`)
   },
 
   // Obtenir le nombre de réservations actives
   getActiveReservationsCount() {
-    return api.get('/reservations/active/count')
+    return api.get('/reservations/user/1').then(res => {
+      // Compter seulement les réservations actives
+      const activeCount = res.data.filter(r => r.status === 'ACTIVE').length
+      return { data: activeCount }
+    }) // TODO: Utiliser l'ID de l'utilisateur connecté
   }
 }
 
 export const evaluationService = {
   // Récupérer les évaluations d'un film
   getFilmEvaluations(filmId) {
-    return api.get(`/evaluations/film/${filmId}`)
+    return api.get(`/reviews/movie/${filmId}`)
   },
 
   // Créer une évaluation
   createEvaluation(evaluationData) {
-    return api.post('/evaluations', evaluationData)
+    return api.post('/reviews', {
+      rating: evaluationData.rating,
+      comment: evaluationData.comment,
+      movieId: evaluationData.filmId,
+      userId: evaluationData.userId // À récupérer du store auth
+    })
   },
 
   // Mettre à jour une évaluation

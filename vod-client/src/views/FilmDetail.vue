@@ -6,31 +6,46 @@
       </div>
       <div class="info-section">
         <h1>{{ film.title }}</h1>
-        <p class="year">{{ film.year }}</p>
+        <p class="year">{{ film.releaseYear }}</p>
         <div class="metadata">
-          <p><strong>Réalisateur:</strong> {{ film.director?.name }}</p>
-          <p><strong>Genres:</strong> {{ film.genres?.join(', ') }}</p>
-          <p><strong>Âge minimum:</strong> {{ film.minimumAge }}+</p>
-          <p v-if="film.isOpenForRental"><strong>Prix:</strong> {{ film.rentalPrice }}€</p>
+          <p><strong>Réalisateur:</strong> {{ film.director }}</p>
+          <p v-if="film.artists && film.artists.length"><strong>Artistes:</strong> {{ film.artists.map(a => a.name).join(', ') }}</p>
         </div>
         <div class="rating-display">
           <span class="stars">⭐ {{ averageRating }}/5</span>
           <span class="count">({{ evaluations.length }} évaluations)</span>
         </div>
         
-        <div class="actions" v-if="isAuthenticated && film.isOpenForRental">
-          <button @click="reserveFilm" class="btn btn-primary" :disabled="activeReservations >= 3">
+        <div class="reservation-status" v-if="isAuthenticated">
+          <p v-if="userHasRentedFilm" class="reserved-badge">✓ Film réservé</p>
+          <p v-if="activeReservations >= 3 && !userHasRentedFilm" class="warning-badge">⚠️ Limite de 3 réservations atteinte</p>
+        </div>
+        
+        <div class="actions" v-if="isAuthenticated">
+          <button 
+            v-if="!userHasRentedFilm"
+            @click="reserveFilm" 
+            class="btn btn-primary" 
+            :disabled="activeReservations >= 3"
+          >
             Réserver ce film
+          </button>
+          <button 
+            v-else
+            @click="cancelReservation" 
+            class="btn btn-danger"
+          >
+            Annuler la réservation
           </button>
         </div>
       </div>
     </div>
 
-    <div class="actors-section" v-if="film.actors && film.actors.length">
-      <h2>Acteurs</h2>
+    <div class="actors-section" v-if="film.artists && film.artists.length">
+      <h2>Artistes</h2>
       <div class="actors-grid">
-        <div v-for="actor in film.actors" :key="actor.id" class="actor-card">
-          <router-link :to="`/artists/${actor.id}`">{{ actor.name }}</router-link>
+        <div v-for="artist in film.artists" :key="artist.id" class="actor-card">
+          <router-link :to="`/artists/${artist.id}`">{{ artist.name }}</router-link>
         </div>
       </div>
     </div>
@@ -80,11 +95,11 @@
       <div class="evaluations-list">
         <div v-for="evaluation in evaluations" :key="evaluation.id" class="evaluation-card card">
           <div class="evaluation-header">
-            <strong>{{ evaluation.user?.pseudo }}</strong>
+            <strong>Utilisateur #{{ evaluation.userId }}</strong>
             <span class="rating">⭐ {{ evaluation.rating }}/5</span>
           </div>
           <p v-if="evaluation.comment" class="comment">{{ evaluation.comment }}</p>
-          <div class="evaluation-date">{{ formatDate(evaluation.createdAt) }}</div>
+          <div class="evaluation-date" v-if="evaluation.createdAt">{{ formatDate(evaluation.createdAt) }}</div>
         </div>
         <p v-if="!evaluations.length" class="no-evaluations">
           Aucune évaluation pour ce film
@@ -112,6 +127,7 @@ const loading = ref(true)
 const showEvaluationForm = ref(false)
 const activeReservations = ref(0)
 const userHasRentedFilm = ref(false)
+const currentReservationId = ref(null)
 
 const newEvaluation = ref({
   rating: 0,
@@ -120,9 +136,9 @@ const newEvaluation = ref({
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const userEvaluation = computed(() => 
-  evaluations.value.find(e => e.user?.pseudo === authStore.user?.pseudo)
+  evaluations.value.find(e => e.userId === authStore.user?.id)
 )
-const canEvaluate = computed(() => isAuthenticated.value && userHasRentedFilm.value)
+const canEvaluate = computed(() => isAuthenticated.value && userHasRentedFilm.value) // Peut évaluer seulement si le film est réservé
 const averageRating = computed(() => {
   if (!evaluations.value.length) return 'N/A'
   const sum = evaluations.value.reduce((acc, e) => acc + e.rating, 0)
@@ -138,24 +154,35 @@ async function loadFilmData() {
     loading.value = true
     const filmId = route.params.id
     
-    const [filmResponse, evaluationsResponse] = await Promise.all([
-      filmService.getFilmById(filmId),
-      evaluationService.getFilmEvaluations(filmId)
-    ])
-    
+    // Charger le film
+    const filmResponse = await filmService.getFilmById(filmId)
     film.value = filmResponse.data
-    evaluations.value = evaluationsResponse.data
+    
+    // Charger les évaluations (reviews)
+    try {
+      const evaluationsResponse = await evaluationService.getFilmEvaluations(filmId)
+      evaluations.value = evaluationsResponse.data || []
+    } catch (err) {
+      console.log('Pas d\'évaluations pour ce film')
+      evaluations.value = []
+    }
     
     if (isAuthenticated.value) {
-      // Vérifier si l'utilisateur a loué ce film
-      const reservationsResponse = await reservationService.getMyReservations()
-      userHasRentedFilm.value = reservationsResponse.data.some(r => r.filmId === filmId)
-      
-      const countResponse = await reservationService.getActiveReservationsCount()
-      activeReservations.value = countResponse.data
+      try {
+        // Vérifier si l'utilisateur a réservé ce film
+        const reservationsResponse = await reservationService.getMyReservations()
+        const reservation = reservationsResponse.data.find(r => r.movieId === parseInt(filmId) && r.status === 'ACTIVE')
+        userHasRentedFilm.value = !!reservation
+        currentReservationId.value = reservation?.id || null
+        
+        const countResponse = await reservationService.getActiveReservationsCount()
+        activeReservations.value = countResponse.data
+      } catch (err) {
+        console.log('Erreur lors du chargement des réservations:', err)
+      }
     }
   } catch (err) {
-    console.error('Erreur:', err)
+    console.error('Erreur lors du chargement du film:', err)
   } finally {
     loading.value = false
   }
@@ -163,8 +190,31 @@ async function loadFilmData() {
 
 async function reserveFilm() {
   try {
+    if (!isAuthenticated.value) {
+      alert('Vous devez être connecté pour réserver un film')
+      return
+    }
+    
     await reservationService.createReservation(film.value.id)
     alert('Film réservé avec succès!')
+    await loadFilmData() // Recharger pour mettre à jour l'état
+  } catch (err) {
+    alert('Erreur: ' + (err.response?.data?.message || err.message))
+  }
+}
+
+async function cancelReservation() {
+  try {
+    if (!currentReservationId.value) {
+      alert('Aucune réservation à annuler')
+      return
+    }
+    
+    if (confirm('Voulez-vous vraiment annuler cette réservation ?')) {
+      await reservationService.endReservation(currentReservationId.value)
+      alert('Réservation annulée avec succès!')
+      await loadFilmData() // Recharger pour mettre à jour l'état
+    }
   } catch (err) {
     alert('Erreur: ' + (err.response?.data?.message || err.message))
   }
@@ -172,17 +222,27 @@ async function reserveFilm() {
 
 async function submitEvaluation() {
   try {
+    if (!isAuthenticated.value) {
+      alert('Vous devez être connecté pour évaluer un film')
+      return
+    }
+    
+    const evaluationData = {
+      filmId: parseInt(film.value.id),
+      userId: authStore.user.id,
+      rating: newEvaluation.value.rating,
+      comment: newEvaluation.value.comment || ''
+    }
+    
     if (userEvaluation.value) {
-      await evaluationService.updateEvaluation(userEvaluation.value.id, newEvaluation.value)
+      await evaluationService.updateEvaluation(userEvaluation.value.id, evaluationData)
     } else {
-      await evaluationService.createEvaluation({
-        filmId: film.value.id,
-        ...newEvaluation.value
-      })
+      await evaluationService.createEvaluation(evaluationData)
     }
     showEvaluationForm.value = false
     await loadFilmData()
   } catch (err) {
+    console.error('Erreur:', err)
     alert('Erreur: ' + (err.response?.data?.message || err.message))
   }
 }
@@ -320,5 +380,49 @@ function formatDate(date) {
 .form-actions {
   display: flex;
   gap: 1rem;
+}
+
+.reservation-status {
+  margin: 1rem 0;
+}
+
+.reserved-badge {
+  background-color: #27ae60;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  display: inline-block;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.warning-badge {
+  background-color: #e67e22;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  display: inline-block;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+}
+
+.btn-danger:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
 }
 </style>

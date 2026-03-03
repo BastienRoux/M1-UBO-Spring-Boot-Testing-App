@@ -26,26 +26,15 @@
         </div>
         <div class="film-info">
           <h3>{{ film.title }}</h3>
-          <p class="film-year">{{ film.year }}</p>
-          <p class="film-director">Réalisé par {{ film.director?.name }}</p>
+          <p class="film-year">{{ film.releaseYear }}</p>
+          <p class="film-director">Réalisé par {{ film.director }}</p>
           <div class="film-rating">
             <span class="stars">⭐ {{ film.averageRating || 'N/A' }}</span>
-          </div>
-          <div class="film-price" v-if="film.isOpenForRental">
-            <span class="price">{{ film.rentalPrice }}€</span>
           </div>
           <div class="film-actions">
             <router-link :to="`/films/${film.id}`" class="btn btn-primary">
               Voir détails
             </router-link>
-            <button 
-              v-if="film.isOpenForRental && isAuthenticated" 
-              @click="reserveFilm(film.id)"
-              class="btn btn-outline"
-              :disabled="activeReservations >= 3"
-            >
-              Réserver
-            </button>
           </div>
         </div>
       </div>

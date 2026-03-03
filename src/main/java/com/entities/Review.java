@@ -2,12 +2,7 @@ package com.entities;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -23,6 +18,16 @@ public class Review {
 	private String comment;
 	
 	private LocalDateTime createdAt;
+	
+	// Pseudo-jointure avec Movie (stocke juste l'ID)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "movie_id")
+	private Movie movie;
+	
+	// Pseudo-jointure avec User (stocke juste l'ID)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	private User user;
 	
 	@PrePersist
 	protected void onCreate() {

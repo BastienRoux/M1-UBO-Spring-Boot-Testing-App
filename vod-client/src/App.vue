@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 
 const authStore = useAuthStore()
@@ -47,6 +47,11 @@ const currentUser = computed(() => authStore.user?.pseudo)
 const logout = () => {
   authStore.logout()
 }
+
+// Charger les données utilisateur au démarrage si un token existe
+onMounted(() => {
+  authStore.checkAuth()
+})
 </script>
 
 <style scoped>

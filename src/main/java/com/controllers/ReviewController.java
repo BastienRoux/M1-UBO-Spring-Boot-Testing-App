@@ -73,4 +73,24 @@ public class ReviewController {
 		return ResponseEntity.noContent().build();
 	}
 	
+	/**
+	 * Obtenir tous les avis d'un film (pseudo-jointure)
+	 * @param movieId L'identifiant du film
+	 * @return Liste des avis du film
+	 */
+	@GetMapping("/movie/{movieId}")
+	public ResponseEntity<List<ReviewDto>> getReviewsByMovieId(@PathVariable Long movieId) {
+		return ResponseEntity.ok(reviewService.getReviewsByMovieId(movieId));
+	}
+	
+	/**
+	 * Obtenir tous les avis d'un utilisateur (pseudo-jointure)
+	 * @param userId L'identifiant de l'utilisateur
+	 * @return Liste des avis de l'utilisateur
+	 */
+	@GetMapping("/user/{userId}")
+	public ResponseEntity<List<ReviewDto>> getReviewsByUserId(@PathVariable Long userId) {
+		return ResponseEntity.ok(reviewService.getReviewsByUserId(userId));
+	}
+	
 }

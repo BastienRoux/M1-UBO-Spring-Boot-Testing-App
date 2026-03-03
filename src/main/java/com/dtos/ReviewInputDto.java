@@ -17,4 +17,11 @@ public class ReviewInputDto {
 	@NotBlank(message = "Le commentaire est obligatoire")
 	private String comment;
 	
+	// IDs pour les pseudo-jointures
+	@NotNull(message = "L'ID du film est obligatoire")
+	private Long movieId;
+	
+	@NotNull(message = "L'ID de l'utilisateur est obligatoire")
+	private Long userId;
+	
 }
