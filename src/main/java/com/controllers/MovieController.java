@@ -24,30 +24,50 @@ public class MovieController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MovieDto> getMovie(@PathVariable Integer id){
+    public ResponseEntity<MovieDto> getMovie(@PathVariable Integer id) {
         return ResponseEntity.ok(movieService.getMovieById(id));
     }
 
     @PostMapping
-    public ResponseEntity<MovieDto> saveMovie(@RequestBody MovieDto movieDto){
+    public ResponseEntity<MovieDto> saveMovie(@RequestBody MovieDto movieDto) {
         // Retourne un statut 201 Created pour la création
         return ResponseEntity.status(HttpStatus.CREATED).body(movieService.saveMovie(movieDto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MovieDto> updateMovie(@PathVariable Integer id, @RequestBody MovieDto movieDto){
+    public ResponseEntity<MovieDto> updateMovie(@PathVariable Integer id, @RequestBody MovieDto movieDto) {
         return ResponseEntity.ok(movieService.updateMovie(id, movieDto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMovie(@PathVariable Integer id){
+    public ResponseEntity<Void> deleteMovie(@PathVariable Integer id) {
         movieService.deleteMovie(id);
         // Retourne un 204 No Content en cas de succès, parfait pour une suppression
         return ResponseEntity.noContent().build();
     }
-    
+
+    @GetMapping("/genre/{genre}")
+    public ResponseEntity<List<MovieDto>> getMoviesByGenre(@PathVariable String genre) {
+        return ResponseEntity.ok(movieService.getMoviesByGenre(genre));
+    }
+
+    @PatchMapping("/{id}/rental")
+    public ResponseEntity<MovieDto> toggleRental(
+            @PathVariable Integer id,
+            @RequestBody java.util.Map<String, Object> updates) {
+
+        Boolean isOpen = updates.containsKey("isOpen") ? (Boolean) updates.get("isOpen") : null;
+        Object priceObj = updates.get("price");
+        Double price = null;
+        if (priceObj != null) {
+            price = Double.valueOf(priceObj.toString());
+        }
+
+        return ResponseEntity.ok(movieService.toggleRental(id, isOpen, price));
+    }
+
     // ===== Gestion des artistes d'un film =====
-    
+
     /**
      * Ajouter un artiste à un film
      */
@@ -57,7 +77,7 @@ public class MovieController {
             @PathVariable Long artistId) {
         return ResponseEntity.ok(movieService.addArtistToMovie(movieId, artistId));
     }
-    
+
     /**
      * Retirer un artiste d'un film
      */
@@ -67,7 +87,7 @@ public class MovieController {
             @PathVariable Long artistId) {
         return ResponseEntity.ok(movieService.removeArtistFromMovie(movieId, artistId));
     }
-    
+
     /**
      * Mettre à jour la liste complète des artistes d'un film
      */
@@ -77,7 +97,7 @@ public class MovieController {
             @RequestBody List<Long> artistIds) {
         return ResponseEntity.ok(movieService.updateMovieArtists(movieId, artistIds));
     }
-    
+
     /**
      * Récupérer les films d'un artiste
      */

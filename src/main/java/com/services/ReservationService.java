@@ -7,6 +7,7 @@ import java.util.List;
 public interface ReservationService {
     /**
      * Sauvegarde une reservation dans le système
+     * 
      * @param reservationDto les données de la reservation à sauvegarder
      * @return la reservation sauvegardé avec son ID généré
      */
@@ -14,14 +15,17 @@ public interface ReservationService {
 
     /**
      * Récupère une reservation par son identifiant
+     * 
      * @param reservationId l'identifiant de la reservation recherché
      * @return la reservation trouvé
-     * @throws jakarta.persistence.EntityNotFoundException si la reservation n'existe pas
+     * @throws jakarta.persistence.EntityNotFoundException si la reservation
+     *                                                     n'existe pas
      */
     ReservationDto getReservationById(Long reservationId);
 
     /**
      * Annule une reservation (met à jour endedAt et status à ENDED)
+     * 
      * @param reservationId l'identifiant de la reservation à annuler
      * @return true si l'annulation a réussi
      */
@@ -29,21 +33,33 @@ public interface ReservationService {
 
     /**
      * Récupère tous les reservation du système
+     * 
      * @return la liste des reservation
      */
     List<ReservationDto> getAllReservations();
-	
-	/**
-	 * Récupère toutes les réservations d'un film (pseudo-jointure)
-	 * @param movieId l'identifiant du film
-	 * @return la liste des réservations du film
-	 */
-	List<ReservationDto> getReservationsByMovieId(Long movieId);
-	
-	/**
-	 * Récupère toutes les réservations d'un utilisateur (pseudo-jointure)
-	 * @param userId l'identifiant de l'utilisateur
-	 * @return la liste des réservations de l'utilisateur
-	 */
-	List<ReservationDto> getReservationsByUserId(Long userId);
+
+    /**
+     * Récupère toutes les réservations d'un film (pseudo-jointure)
+     * 
+     * @param movieId l'identifiant du film
+     * @return la liste des réservations du film
+     */
+    List<ReservationDto> getReservationsByMovieId(Long movieId);
+
+    /**
+     * Récupère toutes les réservations d'un utilisateur (pseudo-jointure)
+     * 
+     * @param userId l'identifiant de l'utilisateur
+     * @return la liste des réservations de l'utilisateur
+     */
+    List<ReservationDto> getReservationsByUserId(Long userId);
+
+    /**
+     * Vérifie si un utilisateur a déjà réservé un film spécifique.
+     * 
+     * @param movieId l'identifiant du film
+     * @param userId  l'identifiant de l'utilisateur
+     * @return true s'il existe une réservation
+     */
+    boolean hasUserRentedMovie(Long movieId, Long userId);
 }

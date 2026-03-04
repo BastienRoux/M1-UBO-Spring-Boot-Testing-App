@@ -22,7 +22,8 @@ public class MovieServiceImpl implements MovieService {
     private final MovieMapper movieMapper;
     private final ArtistRepository artistRepository;
 
-    public MovieServiceImpl(MovieRepository movieRepository, MovieMapper movieMapper, ArtistRepository artistRepository) {
+    public MovieServiceImpl(MovieRepository movieRepository, MovieMapper movieMapper,
+            ArtistRepository artistRepository) {
         this.movieRepository = movieRepository;
         this.movieMapper = movieMapper;
         this.artistRepository = artistRepository;
@@ -70,51 +71,80 @@ public class MovieServiceImpl implements MovieService {
         existingMovie.setTitle(movieDto.getTitle());
         existingMovie.setReleaseYear(movieDto.getReleaseYear());
         existingMovie.setDirector(movieDto.getDirector());
+        existingMovie.setPrice(movieDto.getPrice());
+        existingMovie.setMinAge(movieDto.getMinAge());
+        existingMovie.setIsOpen(movieDto.getIsOpen());
+        existingMovie.setGenres(movieDto.getGenres());
 
         var updatedMovie = movieRepository.save(existingMovie);
         return movieMapper.toDto(updatedMovie);
     }
-    
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MovieDto> getMoviesByGenre(String genre) {
+        return movieRepository.findByGenresContaining(genre).stream()
+                .map(movieMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public MovieDto toggleRental(Integer movieId, Boolean isOpen, Double price) {
+        var movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        String.format("Le film avec l'ID %d n'existe pas", movieId)));
+
+        if (isOpen != null) {
+            movie.setIsOpen(isOpen);
+        }
+        if (price != null) {
+            movie.setPrice(price);
+        }
+
+        var updatedMovie = movieRepository.save(movie);
+        return movieMapper.toDto(updatedMovie);
+    }
+
     @Override
     public MovieDto addArtistToMovie(Integer movieId, Long artistId) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new EntityNotFoundException("Film introuvable avec l'ID: " + movieId));
-        
+
         Artist artist = artistRepository.findById(artistId)
                 .orElseThrow(() -> new EntityNotFoundException("Artiste introuvable avec l'ID: " + artistId));
-        
+
         movie.getArtists().add(artist);
         Movie savedMovie = movieRepository.save(movie);
         return movieMapper.toDto(savedMovie);
     }
-    
+
     @Override
     public MovieDto removeArtistFromMovie(Integer movieId, Long artistId) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new EntityNotFoundException("Film introuvable avec l'ID: " + movieId));
-        
+
         Artist artist = artistRepository.findById(artistId)
                 .orElseThrow(() -> new EntityNotFoundException("Artiste introuvable avec l'ID: " + artistId));
-        
+
         movie.getArtists().remove(artist);
         Movie savedMovie = movieRepository.save(movie);
         return movieMapper.toDto(savedMovie);
     }
-    
+
     @Override
     public MovieDto updateMovieArtists(Integer movieId, List<Long> artistIds) {
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new EntityNotFoundException("Film introuvable avec l'ID: " + movieId));
-        
+
         // Récupérer tous les artistes par leurs IDs
         List<Artist> artists = artistRepository.findAllById(artistIds);
-        
+
         // Remplacer la liste des artistes
         movie.setArtists(new HashSet<>(artists));
         Movie savedMovie = movieRepository.save(movie);
         return movieMapper.toDto(savedMovie);
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<MovieDto> getMoviesByArtist(Long artistId) {
@@ -122,7 +152,7 @@ public class MovieServiceImpl implements MovieService {
         if (!artistRepository.existsById(artistId)) {
             throw new EntityNotFoundException("Artiste introuvable avec l'ID: " + artistId);
         }
-        
+
         // Récupérer tous les films et filtrer ceux qui contiennent cet artiste
         return movieRepository.findAll().stream()
                 .filter(movie -> movie.getArtists().stream()

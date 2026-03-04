@@ -1,3 +1,4 @@
 rootProject.name = 'demo'
 
 include 'api-gateway'
+include 'evaluation-service'

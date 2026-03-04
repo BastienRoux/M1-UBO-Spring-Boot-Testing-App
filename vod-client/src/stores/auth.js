@@ -11,9 +11,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(pseudo, password) {
     try {
-      const response = await api.post('/users/login', { pseudo, password })
-      user.value = response.data.user
-      token.value = response.data.token
+      // Mock login to bypass deleted User Backend logic
+      const mockUser = { id: 1, pseudo: pseudo, role: 'USER', age: 25 }
+      user.value = mockUser
+      token.value = 'mock-jwt-token-xyz'
       localStorage.setItem('token', token.value)
       return true
     } catch (error) {
@@ -24,9 +25,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function register(userData) {
     try {
-      const response = await api.post('/users/register', userData)
-      user.value = response.data.user
-      token.value = response.data.token
+      // Mock register to bypass deleted User Backend logic
+      const mockUser = { id: 2, pseudo: userData.pseudo, role: 'USER', age: userData.age || 20 }
+      user.value = mockUser
+      token.value = 'mock-jwt-token-xyz'
       localStorage.setItem('token', token.value)
       return true
     } catch (error) {
@@ -44,8 +46,9 @@ export const useAuthStore = defineStore('auth', () => {
   async function checkAuth() {
     if (token.value) {
       try {
-        const response = await api.get('/users/me')
-        user.value = response.data
+        // Mock checkAuth to bypass deleted User Backend logic
+        const mockUser = { id: 1, pseudo: 'Demo-User', role: 'USER', age: 25 }
+        user.value = mockUser
       } catch (error) {
         logout()
       }
