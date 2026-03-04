@@ -14,3 +14,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  api_films:
+    build: ./api_films
+    ports:
+      - "12090:12090"
+  api_artistes:
+    build: ./api_artistes
+    ports:
+      - "12091:12091"
+  api_reservations:
+    build: ./api_reservations
+    ports:
+      - "12092:12092"
+  api_reviews:
+    build: ./api_reviews
+    ports:
+      - "12093:12093"
