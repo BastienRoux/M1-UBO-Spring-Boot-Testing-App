@@ -58,6 +58,7 @@ const selectedGenre = ref('')
 const activeReservations = ref(0)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const currentUserId = computed(() => Number(authStore.user?.id || 1))
 
 onMounted(async () => {
   await loadFilms()
@@ -81,7 +82,7 @@ async function loadFilms() {
 
 async function loadActiveReservations() {
   try {
-    const response = await reservationService.getActiveReservationsCount()
+    const response = await reservationService.getActiveReservationsCount(currentUserId.value)
     activeReservations.value = response.data
   } catch (err) {
     console.error('Erreur lors du chargement des réservations:', err)
@@ -111,7 +112,7 @@ async function reserveFilm(filmId) {
   }
   
   try {
-    await reservationService.createReservation(filmId)
+    await reservationService.createReservation(filmId, currentUserId.value)
     alert('Film réservé avec succès!')
     router.push('/my-reservations')
   } catch (err) {

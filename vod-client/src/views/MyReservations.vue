@@ -42,9 +42,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { reservationService } from '../services/filmService'
+import { useAuthStore } from '../stores/auth'
 
 const reservations = ref([])
 const loading = ref(true)
+const authStore = useAuthStore()
+const currentUserId = computed(() => Number(authStore.user?.id || 1))
 
 // Filtrer seulement les réservations actives
 const activeReservations = computed(() => 
@@ -58,7 +61,7 @@ onMounted(async () => {
 async function loadReservations() {
   try {
     loading.value = true
-    const response = await reservationService.getMyReservations()
+    const response = await reservationService.getMyReservations(currentUserId.value)
     reservations.value = response.data
   } catch (err) {
     console.error('Erreur:', err)

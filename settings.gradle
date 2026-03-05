@@ -1,3 +1,3 @@
 rootProject.name = 'demo'
 
-include 'api-gateway', 'api_films', 'api_artistes', 'api_reservations', 'api_reviews'
+include 'api-gateway', 'api_films', 'api_artistes', 'api_reservations', 'api_reviews', 'evaluation-service'

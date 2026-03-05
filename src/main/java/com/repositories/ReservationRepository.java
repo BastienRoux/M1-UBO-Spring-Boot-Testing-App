@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
 	// Pseudo-jointure : recherche par movie_id
-	List<Reservation> findByMovieId(Long movieId);
+	List<Reservation> findByMovieId(Integer movieId);
 
 	// Pseudo-jointure : recherche par user_id
 	List<Reservation> findByUserId(Long userId);

@@ -146,7 +146,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional(readOnly = true)
     public List<ReservationDto> getReservationsByMovieId(Long movieId) {
-        return reservationRepository.findByMovieId(movieId).stream()
+        return reservationRepository.findByMovieId(movieId.intValue()).stream()
                 .map(reservationMapper::toDto)
                 .toList();
     }

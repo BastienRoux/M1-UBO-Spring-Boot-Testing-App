@@ -1,14 +1,14 @@
 <template>
   <div class="artist-detail" v-if="artist">
     <h1>{{ artist.name }}</h1>
-    <p class="role">{{ artist.role }}</p>
+    <p class="role">{{ artist.genre }}</p>
     
     <div class="films-section">
       <h2>Films</h2>
       <div class="grid">
         <div v-for="film in films" :key="film.id" class="film-card card">
           <h3>{{ film.title }}</h3>
-          <p>{{ film.year }}</p>
+          <p>{{ film.releaseYear }}</p>
           <router-link :to="`/films/${film.id}`" class="btn btn-primary">
             Voir détails
           </router-link>

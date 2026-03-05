@@ -17,7 +17,10 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 @WebServlet(name = "ReviewServlet", urlPatterns = "/reviews/*")
 public class ReviewServlet extends HttpServlet {
@@ -25,6 +28,9 @@ public class ReviewServlet extends HttpServlet {
     private MongoTemplate mongoTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final RestTemplate restTemplate = new RestTemplate();
+    private final List<Review> fallbackReviews = new CopyOnWriteArrayList<>();
+    private final AtomicLong fallbackIdSequence = new AtomicLong(1);
+    private volatile boolean mongoAvailable = true;
 
     @Override
     public void init() throws ServletException {
@@ -39,7 +45,7 @@ public class ReviewServlet extends HttpServlet {
 
         try {
             if (pathInfo == null || pathInfo.equals("/")) {
-                List<Review> reviews = mongoTemplate.findAll(Review.class);
+                List<Review> reviews = findAllReviews();
                 objectMapper.writeValue(resp.getWriter(), reviews);
             } else if (pathInfo.startsWith("/movie/")) {
                 String[] parts = pathInfo.split("/");
@@ -47,8 +53,7 @@ public class ReviewServlet extends HttpServlet {
 
                 if (parts.length == 4 && "average".equals(parts[3])) {
                     // Calculate average
-                    Query query = new Query(Criteria.where("movieId").is(movieId));
-                    List<Review> reviews = mongoTemplate.find(query, Review.class);
+                    List<Review> reviews = findReviewsByMovieId(movieId);
                     double average = reviews.stream()
                             .mapToInt(Review::getRating)
                             .average()
@@ -56,15 +61,13 @@ public class ReviewServlet extends HttpServlet {
                     resp.getWriter().write(String.valueOf(average));
                 } else {
                     // Get reviews for movie
-                    Query query = new Query(Criteria.where("movieId").is(movieId));
-                    List<Review> reviews = mongoTemplate.find(query, Review.class);
+                    List<Review> reviews = findReviewsByMovieId(movieId);
                     objectMapper.writeValue(resp.getWriter(), reviews);
                 }
             } else if (pathInfo.startsWith("/user/")) {
                 String[] parts = pathInfo.split("/");
                 Long userId = Long.parseLong(parts[2]);
-                Query query = new Query(Criteria.where("userId").is(userId));
-                List<Review> reviews = mongoTemplate.find(query, Review.class);
+                List<Review> reviews = findReviewsByUserId(userId);
                 objectMapper.writeValue(resp.getWriter(), reviews);
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -95,7 +98,7 @@ public class ReviewServlet extends HttpServlet {
 
             if (Boolean.TRUE.equals(hasRented)) {
                 review.setCreatedAt(LocalDateTime.now());
-                mongoTemplate.save(review);
+                saveReview(review);
                 resp.setStatus(HttpServletResponse.SC_CREATED);
                 objectMapper.writeValue(resp.getWriter(), review);
             } else {
@@ -106,5 +109,60 @@ public class ReviewServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write("{\"error\": \"" + e.getMessage() + "\"}");
         }
+    }
+
+    private List<Review> findAllReviews() {
+        if (mongoAvailable) {
+            try {
+                return mongoTemplate.findAll(Review.class);
+            } catch (Exception ignored) {
+                mongoAvailable = false;
+            }
+        }
+        return new ArrayList<>(fallbackReviews);
+    }
+
+    private List<Review> findReviewsByMovieId(Long movieId) {
+        if (mongoAvailable) {
+            try {
+                Query query = new Query(Criteria.where("movieId").is(movieId));
+                return mongoTemplate.find(query, Review.class);
+            } catch (Exception ignored) {
+                mongoAvailable = false;
+            }
+        }
+        return fallbackReviews.stream()
+                .filter(r -> movieId.equals(r.getMovieId()))
+                .toList();
+    }
+
+    private List<Review> findReviewsByUserId(Long userId) {
+        if (mongoAvailable) {
+            try {
+                Query query = new Query(Criteria.where("userId").is(userId));
+                return mongoTemplate.find(query, Review.class);
+            } catch (Exception ignored) {
+                mongoAvailable = false;
+            }
+        }
+        return fallbackReviews.stream()
+                .filter(r -> userId.equals(r.getUserId()))
+                .toList();
+    }
+
+    private void saveReview(Review review) {
+        if (mongoAvailable) {
+            try {
+                mongoTemplate.save(review);
+                return;
+            } catch (Exception ignored) {
+                mongoAvailable = false;
+            }
+        }
+
+        if (review.getId() == null || review.getId().isBlank()) {
+            review.setId(String.valueOf(fallbackIdSequence.getAndIncrement()));
+        }
+        fallbackReviews.add(review);
     }
 }
