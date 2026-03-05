@@ -114,17 +114,17 @@ export const evaluationService = {
 
   // Mettre à jour une évaluation
   updateEvaluation(id, evaluationData) {
-    return api.put(`/evaluations/${id}`, evaluationData)
+    return api.put(`/reviews/${id}`, evaluationData)
   },
 
   // Supprimer une évaluation
   deleteEvaluation(id) {
-    return api.delete(`/evaluations/${id}`)
+    return api.delete(`/reviews/${id}`)
   },
 
   // Récupérer la moyenne des évaluations
   getAverageRating(filmId) {
-    return api.get(`/evaluations/film/${filmId}/average`)
+    return api.get(`/reviews/movie/${filmId}/average`)
   }
 }
 

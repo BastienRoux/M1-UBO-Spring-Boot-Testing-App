@@ -24,28 +24,14 @@ public class ApiGatewayApplication {
         return builder.routes()
                 // Route pour le service Films (Spring) - retire le préfixe /api
                 .route("film_service", r -> r
-                        .path("/api/films/**", "/api/artists/**", "/api/reservations/**", "/api/reviews/**", "/api/users/**")
+                        .path("/api/films/**", "/api/artists/**", "/api/reservations/**")
                         .filters(f -> f.rewritePath("/api/(?<segment>.*)", "/${segment}"))
                         .uri("http://localhost:12082"))
-                
                 // Route pour le service Evaluations (Servlet)
                 .route("evaluation_service", r -> r
-                        .path("/api/evaluations/**")
+                        .path("/api/reviews/**")
                         .filters(f -> f.rewritePath("/api/(?<segment>.*)", "/${segment}"))
                         .uri("http://localhost:12083"))
-                
-                // Route pour le service Affiches (Servlet)
-                .route("poster_service", r -> r
-                        .path("/api/posters/**")
-                        .filters(f -> f.rewritePath("/api/(?<segment>.*)", "/${segment}"))
-                        .uri("http://localhost:12084"))
-                
-                // Route pour le service Paiement
-                .route("payment_service", r -> r
-                        .path("/api/payments/**")
-                        .filters(f -> f.rewritePath("/api/(?<segment>.*)", "/${segment}"))
-                        .uri("http://localhost:12085"))
-                
                 .build();
     }
 

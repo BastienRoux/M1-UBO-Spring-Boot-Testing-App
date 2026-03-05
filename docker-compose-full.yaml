@@ -49,22 +49,22 @@ services:
     networks:
       - vod-network
 
-  # Service Evaluations (Servlet - à implémenter)
+  # Service Evaluations (Servlet)
   evaluation-service:
-    # build:
-    #   context: ./evaluation-service
-    #   dockerfile: Dockerfile
-    # container_name: vod-evaluation-service
-    # environment:
-    #   MONGO_URI: mongodb://admin:admin_password@mongodb:27017/vod_mongo?authSource=admin
-    # ports:
-    #   - "12083:12083"
-    # depends_on:
-    #   - mongodb
-    # networks:
-    #   - vod-network
-    image: busybox
-    command: echo "Evaluation service not yet implemented"
+    build:
+      context: ./evaluation-service
+      dockerfile: Dockerfile
+    container_name: vod-evaluation-service
+    environment:
+      spring.data.mongodb.uri: mongodb://admin:admin_password@mongodb:27017/vod_mongo?authSource=admin
+      FILM_SERVICE_URL: http://film-service:12082
+    ports:
+      - "12083:12083"
+    depends_on:
+      - mongodb
+      - film-service
+    networks:
+      - vod-network
 
   # Service Affiches (Servlet - à implémenter)
   poster-service:
