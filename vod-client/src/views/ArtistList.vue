@@ -7,7 +7,7 @@
     <div v-else class="grid">
       <div v-for="artist in artists" :key="artist.id" class="artist-card card">
         <h3>{{ artist.name }}</h3>
-        <p class="artist-role">{{ artist.role }}</p>
+        <p class="artist-role">{{ artist.genre }}</p>
         <router-link :to="`/artists/${artist.id}`" class="btn btn-outline">
           Voir les films
         </router-link>

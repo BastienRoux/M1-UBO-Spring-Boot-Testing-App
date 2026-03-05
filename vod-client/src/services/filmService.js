@@ -66,16 +66,16 @@ export const artistService = {
 
 export const reservationService = {
   // Récupérer mes réservations
-  getMyReservations() {
-    return api.get('/reservations/user/1') // TODO: Récupérer l'ID de l'utilisateur connecté
+  getMyReservations(userId) {
+    return api.get(`/reservations/user/${userId}`)
   },
 
   // Créer une réservation
-  createReservation(filmId) {
+  createReservation(filmId, userId) {
     return api.post('/reservations', { 
       name: 'Reservation',
       movieId: filmId,
-      userId: 1, // TODO: Récupérer l'ID de l'utilisateur connecté
+      userId,
       date: new Date().toISOString().split('T')[0],
       status: 'ACTIVE'
     })
@@ -87,12 +87,12 @@ export const reservationService = {
   },
 
   // Obtenir le nombre de réservations actives
-  getActiveReservationsCount() {
-    return api.get('/reservations/user/1').then(res => {
+  getActiveReservationsCount(userId) {
+    return api.get(`/reservations/user/${userId}`).then(res => {
       // Compter seulement les réservations actives
       const activeCount = res.data.filter(r => r.status === 'ACTIVE').length
       return { data: activeCount }
-    }) // TODO: Utiliser l'ID de l'utilisateur connecté
+    })
   }
 }
 
@@ -108,23 +108,24 @@ export const evaluationService = {
       rating: evaluationData.rating,
       comment: evaluationData.comment,
       movieId: evaluationData.filmId,
-      userId: evaluationData.userId // À récupérer du store auth
+      userId: evaluationData.userId,
+      userPseudo: evaluationData.userPseudo
     })
   },
 
   // Mettre à jour une évaluation
   updateEvaluation(id, evaluationData) {
-    return api.put(`/evaluations/${id}`, evaluationData)
+    return api.put(`/reviews/${id}`, evaluationData)
   },
 
   // Supprimer une évaluation
   deleteEvaluation(id) {
-    return api.delete(`/evaluations/${id}`)
+    return api.delete(`/reviews/${id}`)
   },
 
   // Récupérer la moyenne des évaluations
   getAverageRating(filmId) {
-    return api.get(`/evaluations/film/${filmId}/average`)
+    return api.get(`/reviews/movie/${filmId}/average`)
   }
 }
 

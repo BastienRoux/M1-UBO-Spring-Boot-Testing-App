@@ -1,21 +1,25 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
-  title: artist-api
-  description: API pour la gestion d'une base de données d'artistes.
-  version: 1.0.0
-
-servers:
-  - url: http://localhost:8000/api
-    description: Serveur de test
+  title: API Artistes
+  version: 1.1.0
+  description: API de gestion des artistes avec filtrage par role (acteur/realisateur).
 
 paths:
-  /artist:
+  /artists:
     get:
-      summary: Liste tous les artistes
-      description: Renvoie une liste de tous les artistes dans la base de données.
+      summary: Lister les artistes
+      tags: [Artistes]
+      parameters:
+        - name: role
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ACTOR, DIRECTOR]
+          description: Filtrer les artistes par role metier.
       responses:
         '200':
-          description: Une liste d'artistes
+          description: Liste des artistes
           content:
             application/json:
               schema:
@@ -23,101 +27,97 @@ paths:
                 items:
                   $ref: '#/components/schemas/Artist'
     post:
-      summary: Ajoute un nouvel artiste
-      description: Ajoute un nouvel artiste à la base de données.
+      summary: Creer un artiste
+      tags: [Artistes]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Artist'
+              $ref: '#/components/schemas/ArtistInput'
       responses:
         '201':
-          description: Artiste créé avec succès
-        '400':
-          description: Requête invalide
-  /artist/{id}:
+          description: Artiste cree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+
+  /artists/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
     get:
-      summary: Trouver un artiste par son ID
-      description: Renvoie un artiste spécifique identifié par son ID.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: L'ID de l'artiste à trouver.
-          schema:
-            type: string
+      summary: Recuperer un artiste par identifiant
+      tags: [Artistes]
       responses:
         '200':
-          description: Détails d'un artiste
+          description: Artiste trouve
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Artist'
         '404':
-          description: Artiste non trouvé
+          description: Artiste non trouve
     put:
-      summary: Met à jour un artiste
-      description: Met à jour les informations d'un artiste spécifique.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: L'ID de l'artiste à mettre à jour.
-          schema:
-            type: string
+      summary: Mettre a jour un artiste
+      tags: [Artistes]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Artist'
+              $ref: '#/components/schemas/ArtistInput'
       responses:
         '200':
-          description: Artiste mis à jour avec succès
+          description: Artiste mis a jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
         '404':
-          description: Artiste non trouvé
-        '400':
-          description: Requête invalide
+          description: Artiste non trouve
     delete:
-      summary: Supprime un artiste
-      description: Supprime un artiste spécifique de la base de données.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: L'ID de l'artiste à supprimer.
-          schema:
-            type: string
+      summary: Supprimer un artiste
+      tags: [Artistes]
       responses:
-        '200':
-          description: Artiste supprimé avec succès
+        '204':
+          description: Artiste supprime
         '404':
-          description: Artiste non trouvé
+          description: Artiste non trouve
+
 components:
   schemas:
     Artist:
       type: object
-      required:
-        - id
-        - nom
       properties:
         id:
+          type: integer
+          format: int64
+        name:
           type: string
-          description: L'identifiant unique de l'artiste.
-        nom:
+        role:
           type: string
-          description: Le nom de l'artiste.
+          enum: [ACTOR, DIRECTOR]
         genre:
           type: string
-          description: Le genre musical de l'artiste.
-        pays:
+        biography:
           type: string
-          description: Le pays d'origine de l'artiste.
-        dateNaissance:
+
+    ArtistInput:
+      type: object
+      required: [name]
+      properties:
+        name:
           type: string
-          format: date
-          description: La date de naissance de l'artiste.
-        biographie:
+        role:
           type: string
-          description: Une courte biographie de l'artiste.
+          enum: [ACTOR, DIRECTOR]
+        genre:
+          type: string
+        biography:
+          type: string

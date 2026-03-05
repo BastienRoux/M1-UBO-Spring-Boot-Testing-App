@@ -46,7 +46,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { filmService, reservationService } from '../services/filmService'
+import { filmService, reservationService, evaluationService } from '../services/filmService'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -58,6 +58,7 @@ const selectedGenre = ref('')
 const activeReservations = ref(0)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const currentUserId = computed(() => Number(authStore.user?.id || 1))
 
 onMounted(async () => {
   await loadFilms()
@@ -70,7 +71,7 @@ async function loadFilms() {
   try {
     loading.value = true
     const response = await filmService.getAllFilms()
-    films.value = response.data
+    films.value = await enrichFilmsWithAverageRating(response.data)
   } catch (err) {
     error.value = 'Erreur lors du chargement des films'
     console.error(err)
@@ -81,7 +82,7 @@ async function loadFilms() {
 
 async function loadActiveReservations() {
   try {
-    const response = await reservationService.getActiveReservationsCount()
+    const response = await reservationService.getActiveReservationsCount(currentUserId.value)
     activeReservations.value = response.data
   } catch (err) {
     console.error('Erreur lors du chargement des réservations:', err)
@@ -95,13 +96,36 @@ async function filterByGenre() {
     try {
       loading.value = true
       const response = await filmService.getFilmsByGenre(selectedGenre.value)
-      films.value = response.data
+      films.value = await enrichFilmsWithAverageRating(response.data)
     } catch (err) {
       error.value = 'Erreur lors du filtrage'
     } finally {
       loading.value = false
     }
   }
+}
+
+async function enrichFilmsWithAverageRating(movieList) {
+  const moviesWithRatings = await Promise.all(
+    movieList.map(async (film) => {
+      try {
+        const averageResponse = await evaluationService.getAverageRating(film.id)
+        const averageValue = Number(averageResponse.data)
+
+        return {
+          ...film,
+          averageRating: Number.isFinite(averageValue) ? averageValue.toFixed(1) : null
+        }
+      } catch {
+        return {
+          ...film,
+          averageRating: null
+        }
+      }
+    })
+  )
+
+  return moviesWithRatings
 }
 
 async function reserveFilm(filmId) {
@@ -111,7 +135,7 @@ async function reserveFilm(filmId) {
   }
   
   try {
-    await reservationService.createReservation(filmId)
+    await reservationService.createReservation(filmId, currentUserId.value)
     alert('Film réservé avec succès!')
     router.push('/my-reservations')
   } catch (err) {

@@ -1,142 +1,197 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
-  title: reservations-api
-  description: API pour la réservation d'un film.
-  version: 1.0.0
+  title: API Reservations
+  version: 1.1.0
+  description: |
+    API de reservation de films.
+    Le paiement est delegue a une API externe (autre groupe) et doit etre valide
+    avant confirmation definitive de la reservation.
+
+externalDocs:
+  description: Contrat API de pseudo-paiement (groupe partenaire)
+  url: https://example.org/payment-team-openapi
 
 paths:
   /reservations:
-    post:
-      summary: Ajouter une réservation
-      description: Ajoute une réservation à la BDD.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Reservation'
-      responses:
-        '201':
-          description: Réservation créée avec succès
-        '400':
-          description: Requête invalide
-
-  /reservations/u/{id_utilisateur}:
     get:
-      summary: Obtenir la liste de réservations d'un utilisateur dont l'identifiant est passé en paramètre
-      description: Renvoie une réservation spécifique identifiée par son identifiant.
-      parameters:
-        - name: id_utilisateur
-          in: path
-          required: true
-          description: L'identifiant de l'auteur de la réservation.
-          schema:
-            type: string
-      reponses:
+      summary: Lister toutes les reservations
+      tags: [Reservations]
+      responses:
         '200':
-          description: Liste des réservations de l'auteur
+          description: Liste des reservations
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Reservation'
-        '404':
-          description: Pas de réservation pour l'identifiant utilisateur fourni
-  /reservations/{id_reservation}:
-    get:
-      summary: Trouver une réservation par son identifiant
-      description: Renvoie une réservation spécifique identifiée par son identifiant.
-      parameters:
-        - name: id_reservation
-          in: path
-          required: true
-          description: L'identifiant de la réservation à trouver.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Détails d'une réservation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Reservation'
-        '404':
-          description: Réservation non trouvée
-    put:
-      summary: Mettre à jour une réservation
-      description: Met à jour les informations d'une réservation.
-      parameters:
-        - name: id_reservation
-          in: path
-          required: true
-          description: L'identifiant de la réservation à mettre à jour.
-          schema:
-            type: string
+    post:
+      summary: Creer une reservation
+      description: |
+        Regles metier a verifier cote backend:
+        - max 3 reservations actives par utilisateur
+        - age minimum requis pour le film
+        - validation de paiement via l'API externe
+      tags: [Reservations]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Reservation'
+              $ref: '#/components/schemas/ReservationCreateRequest'
+      responses:
+        '201':
+          description: Reservation creee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '400':
+          description: Requete invalide
+        '402':
+          description: Paiement refuse par l'API externe
+        '409':
+          description: Regle metier non respectee
+
+  /reservations/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      summary: Recuperer une reservation par identifiant
+      tags: [Reservations]
       responses:
         '200':
-          description: Réservation mise à jour avec succès
+          description: Reservation trouvee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
         '404':
-          description: Réservation non trouvée
-        '400':
-          description: Requête invalide
+          description: Reservation non trouvee
     delete:
-      summary: Supprimer une réservation
-      description: Supprime une réservation spécifique. (vraiment utile ?)
+      summary: Cloturer une reservation (fin de location)
+      description: Ne supprime pas l'historique, passe le statut en ENDED.
+      tags: [Reservations]
+      responses:
+        '200':
+          description: Reservation cloturee
+        '404':
+          description: Reservation non trouvee
+
+  /reservations/user/{userId}:
+    get:
+      summary: Lister les reservations d'un utilisateur
+      tags: [Reservations]
       parameters:
-        - name: id_reservation
+        - name: userId
           in: path
           required: true
-          description: L'identifiant de la réservation à supprimer.
           schema:
-            type: string
+            type: integer
+            format: int64
       responses:
         '200':
-          description: Réservation supprimée avec succès
-        '404':
-          description: Réservation non trouvée
+          description: Reservations de l'utilisateur
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+
+  /reservations/movie/{movieId}:
+    get:
+      summary: Lister les reservations d'un film
+      tags: [Reservations]
+      parameters:
+        - name: movieId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Reservations du film
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+
+  /reservations/check:
+    get:
+      summary: Verifier si un utilisateur a deja loue un film
+      tags: [Reservations]
+      parameters:
+        - name: movieId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Resultat booleen
+          content:
+            application/json:
+              schema:
+                type: boolean
 
 components:
   schemas:
     Reservation:
       type: object
-      required:
-        - id_reservation
-        - date_debut
-        - date_fin
-        - id_film
-        - id_paiement
-        - pseudo
       properties:
-        idReservation:
+        id:
           type: integer
-          examples: [100]
-          description: L'identifiant de la réservation.
-        dateDebut:
+          format: int64
+        movieId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        startedAt:
           type: string
-          examples: ['2026-01-27']
-          format: date
-          description: La date de début de la réservation.
-        dateFin:
+          format: date-time
+        endedAt:
           type: string
-          examples: ['2026-01-29']
-          format: date
-          description: La date de fin de la réservation.
-        id_film:
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [ACTIVE, ENDED]
+        movieTitle:
+          type: string
+        userPseudo:
+          type: string
+        paymentTransactionId:
+          type: string
+          description: Reference retournee par l'API de paiement externe.
+
+    ReservationCreateRequest:
+      type: object
+      required: [movieId, userId]
+      properties:
+        movieId:
           type: integer
-          examples: [64]
-          description : L'identifiant du film associé à la réservation.
-        id_paiement:
+          format: int64
+        userId:
           type: integer
-          examples: [3011]
-          description: L'identifiant du paiement associé à la réservation.
-        id_utilisateur:
-          type: integer
-          examples: [156]
-          description: L'identifiant de l'utilisateur qui a passé la réservation.
+          format: int64
+        paymentToken:
+          type: string
+          description: Jeton provenant de l'API de paiement externe.

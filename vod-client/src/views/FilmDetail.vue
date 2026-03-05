@@ -95,7 +95,7 @@
       <div class="evaluations-list">
         <div v-for="evaluation in evaluations" :key="evaluation.id" class="evaluation-card card">
           <div class="evaluation-header">
-            <strong>Utilisateur #{{ evaluation.userId }}</strong>
+            <strong>{{ getEvaluationAuthorLabel(evaluation.userId) }}</strong>
             <span class="rating">⭐ {{ evaluation.rating }}/5</span>
           </div>
           <p v-if="evaluation.comment" class="comment">{{ evaluation.comment }}</p>
@@ -135,8 +135,9 @@ const newEvaluation = ref({
 })
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const currentUserId = computed(() => Number(authStore.user?.id || 1))
 const userEvaluation = computed(() => 
-  evaluations.value.find(e => e.userId === authStore.user?.id)
+  evaluations.value.find(e => e.userId === currentUserId.value)
 )
 const canEvaluate = computed(() => isAuthenticated.value && userHasRentedFilm.value) // Peut évaluer seulement si le film est réservé
 const averageRating = computed(() => {
@@ -170,12 +171,12 @@ async function loadFilmData() {
     if (isAuthenticated.value) {
       try {
         // Vérifier si l'utilisateur a réservé ce film
-        const reservationsResponse = await reservationService.getMyReservations()
+        const reservationsResponse = await reservationService.getMyReservations(currentUserId.value)
         const reservation = reservationsResponse.data.find(r => r.movieId === parseInt(filmId) && r.status === 'ACTIVE')
         userHasRentedFilm.value = !!reservation
         currentReservationId.value = reservation?.id || null
         
-        const countResponse = await reservationService.getActiveReservationsCount()
+        const countResponse = await reservationService.getActiveReservationsCount(currentUserId.value)
         activeReservations.value = countResponse.data
       } catch (err) {
         console.log('Erreur lors du chargement des réservations:', err)
@@ -195,7 +196,7 @@ async function reserveFilm() {
       return
     }
     
-    await reservationService.createReservation(film.value.id)
+    await reservationService.createReservation(film.value.id, currentUserId.value)
     alert('Film réservé avec succès!')
     await loadFilmData() // Recharger pour mettre à jour l'état
   } catch (err) {
@@ -229,7 +230,8 @@ async function submitEvaluation() {
     
     const evaluationData = {
       filmId: parseInt(film.value.id),
-      userId: authStore.user.id,
+      userId: currentUserId.value,
+      userPseudo: authStore.user?.pseudo,
       rating: newEvaluation.value.rating,
       comment: newEvaluation.value.comment || ''
     }
@@ -257,6 +259,18 @@ function handleImageError(event) {
 
 function formatDate(date) {
   return new Date(date).toLocaleDateString('fr-FR')
+}
+
+function getEvaluationAuthorLabel(userId) {
+  const evaluation = evaluations.value.find(e => e.userId === userId)
+  if (evaluation?.userPseudo) {
+    return evaluation.userPseudo
+  }
+
+  if (Number(userId) === currentUserId.value && authStore.user?.pseudo) {
+    return authStore.user.pseudo
+  }
+  return `Utilisateur #${userId}`
 }
 </script>
 
