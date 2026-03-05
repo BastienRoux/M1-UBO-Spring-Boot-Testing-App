@@ -89,6 +89,14 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<MovieDto> getMoviesByDirector(String director) {
+        return movieRepository.findByDirectorContainingIgnoreCase(director).stream()
+                .map(movieMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public MovieDto toggleRental(Integer movieId, Boolean isOpen, Double price) {
         var movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new EntityNotFoundException(

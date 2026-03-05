@@ -16,6 +16,8 @@ public interface MovieService {
 
     List<MovieDto> getMoviesByGenre(String genre);
 
+    List<MovieDto> getMoviesByDirector(String director);
+
     MovieDto toggleRental(Integer movieId, Boolean isOpen, Double price);
 
     // Gestion des artistes

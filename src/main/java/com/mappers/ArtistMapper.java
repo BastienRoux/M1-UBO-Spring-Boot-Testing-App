@@ -17,6 +17,7 @@ public class ArtistMapper {
         artistDto.setId(artist.getId());
         artistDto.setName(artist.getName());
         artistDto.setGenre(artist.getGenre());
+        artistDto.setRole(artist.getRole());
         artistDto.setBiography(artist.getBiography());
 
         return artistDto;
@@ -33,6 +34,7 @@ public class ArtistMapper {
         }
         artist.setName(artistDto.getName());
         artist.setGenre(artistDto.getGenre());
+        artist.setRole(artistDto.getRole());
         artist.setBiography(artistDto.getBiography());
 
         return artist;
@@ -46,6 +48,7 @@ public class ArtistMapper {
         Artist artist = new Artist();
         artist.setName(artistInputDto.getName());
         artist.setGenre(artistInputDto.getGenre());
+        artist.setRole(artistInputDto.getRole());
         artist.setBiography(artistInputDto.getBiography());
 
         return artist;

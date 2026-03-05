@@ -90,6 +90,12 @@ public class ReviewServlet extends HttpServlet {
                 return;
             }
 
+            if (review.getRating() < 0 || review.getRating() > 5) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write("{\"error\": \"Rating must be between 0 and 5\"}");
+                return;
+            }
+
             // Check if user has rented the movie
             // Call Film Service API
             String filmServiceUrl = "http://localhost:12082/reservations/check?movieId=" + review.getMovieId()

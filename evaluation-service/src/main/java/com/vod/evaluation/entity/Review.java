@@ -11,6 +11,7 @@ public class Review {
     private String id;
     private Long movieId;
     private Long userId;
+    private String userPseudo;
     private Integer rating;
     private String comment;
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -44,6 +45,14 @@ public class Review {
 
     public Integer getRating() {
         return rating;
+    }
+
+    public String getUserPseudo() {
+        return userPseudo;
+    }
+
+    public void setUserPseudo(String userPseudo) {
+        this.userPseudo = userPseudo;
     }
 
     public void setRating(Integer rating) {

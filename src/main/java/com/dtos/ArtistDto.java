@@ -12,6 +12,8 @@ public class ArtistDto {
     private String name;
     
     private String genre;
+
+    private String role;
     
     private String biography;
 }

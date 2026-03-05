@@ -11,8 +11,12 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+    if (currentUser?.role) {
+      config.headers['X-User-Role'] = currentUser.role
     }
     return config
   },

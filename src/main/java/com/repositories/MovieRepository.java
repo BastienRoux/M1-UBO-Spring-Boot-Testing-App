@@ -12,4 +12,7 @@ public interface MovieRepository extends JpaRepository<Movie, Integer> {
 
     // Recherche de films par genre
     List<Movie> findByGenresContaining(String genre);
+
+    // Recherche de films par realisateur
+    List<Movie> findByDirectorContainingIgnoreCase(String director);
 }

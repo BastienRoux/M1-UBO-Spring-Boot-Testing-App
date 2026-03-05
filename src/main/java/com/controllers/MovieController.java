@@ -51,10 +51,20 @@ public class MovieController {
         return ResponseEntity.ok(movieService.getMoviesByGenre(genre));
     }
 
+    @GetMapping("/director/{director}")
+    public ResponseEntity<List<MovieDto>> getMoviesByDirector(@PathVariable String director) {
+        return ResponseEntity.ok(movieService.getMoviesByDirector(director));
+    }
+
     @PatchMapping("/{id}/rental")
     public ResponseEntity<MovieDto> toggleRental(
             @PathVariable Integer id,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole,
             @RequestBody java.util.Map<String, Object> updates) {
+
+        if (userRole == null || !"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         Boolean isOpen = updates.containsKey("isOpen") ? (Boolean) updates.get("isOpen") : null;
         Object priceObj = updates.get("price");

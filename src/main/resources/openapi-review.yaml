@@ -1,21 +1,19 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
-  title: API de gestion de reviews
-  description: API pour la gestion des avis et notes sur les films.
-  version: 1.0.0
-
-servers:
-  - url: http://localhost:8000/api
-    description: Serveur de test
+  title: API Reviews
+  version: 1.1.0
+  description: |
+    API d'evaluations developpee en Servlet avec stockage MongoDB.
+    Les notes sont strictement comprises entre 0 et 5.
 
 paths:
   /reviews:
     get:
-      summary: Liste toutes les reviews
-      description: Renvoie une liste de toutes les reviews dans la base de données.
+      summary: Lister toutes les evaluations
+      tags: [Reviews]
       responses:
         '200':
-          description: Une liste de reviews
+          description: Liste des evaluations
           content:
             application/json:
               schema:
@@ -23,108 +21,130 @@ paths:
                 items:
                   $ref: '#/components/schemas/Review'
     post:
-      summary: Ajoute une nouvelle review
-      description: Ajoute une nouvelle review à la base de données.
+      summary: Ajouter une evaluation
+      description: L'utilisateur doit avoir reserve le film.
+      tags: [Reviews]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Review'
+              $ref: '#/components/schemas/ReviewInput'
       responses:
         '201':
-          description: Review créée avec succès
-        '400':
-          description: Requête invalide
-  /reviews/{id}:
-    get:
-      summary: Trouver une review par son ID
-      description: Renvoie une review spécifique identifiée par son ID.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: L'ID de la review à trouver.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Détails d'une review
+          description: Evaluation creee
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Review'
-        '404':
-          description: Review non trouvée
-    put:
-      summary: Met à jour une review
-      description: Met à jour les informations d'une review spécifique.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: L'ID de la review à mettre à jour.
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Review'
-      responses:
-        '200':
-          description: Review mise à jour avec succès
-        '404':
-          description: Review non trouvée
         '400':
-          description: Requête invalide
-    delete:
-      summary: Supprime une review
-      description: Supprime une review spécifique de la base de données.
+          description: Donnees invalides (dont note hors bornes)
+        '403':
+          description: Utilisateur non autorise a evaluer ce film
+
+  /reviews/movie/{movieId}:
+    get:
+      summary: Recuperer les evaluations d'un film
+      tags: [Reviews]
       parameters:
-        - name: id
+        - name: movieId
           in: path
           required: true
-          description: L'ID de la review à supprimer.
           schema:
-            type: string
+            type: integer
+            format: int64
       responses:
         '200':
-          description: Review supprimée avec succès
-        '404':
-          description: Review non trouvée
+          description: Evaluations du film
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+
+  /reviews/movie/{movieId}/average:
+    get:
+      summary: Recuperer la moyenne des notes d'un film
+      tags: [Reviews]
+      parameters:
+        - name: movieId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Moyenne des notes
+          content:
+            text/plain:
+              schema:
+                type: number
+                format: double
+
+  /reviews/user/{userId}:
+    get:
+      summary: Recuperer les evaluations d'un utilisateur
+      tags: [Reviews]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Evaluations de l'utilisateur
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+
 components:
   schemas:
     Review:
       type: object
-      required:
-        - id
-        - filmId
-        - note
       properties:
         id:
           type: string
-          description: L'identifiant unique de la review.
-        filmId:
+        movieId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        userPseudo:
           type: string
-          description: L'identifiant du film concerné par la review.
-        utilisateurId:
-          type: string
-          description: L'identifiant de l'utilisateur ayant posté la review.
-        note:
-          type: number
-          format: float
+          description: Pseudo de l'utilisateur createur de l'evaluation.
+        rating:
+          type: integer
           minimum: 0
-          maximum: 10
-          description: La note attribuée au film (de 0 à 10).
-        titre:
+          maximum: 5
+        comment:
           type: string
-          description: Le titre de la review.
-        commentaire:
-          type: string
-          description: Le commentaire détaillé de la review.
-        datePublication:
+        createdAt:
           type: string
           format: date-time
-          description: La date et heure de publication de la review.
+
+    ReviewInput:
+      type: object
+      required: [movieId, userId, rating]
+      properties:
+        movieId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        userPseudo:
+          type: string
+        rating:
+          type: integer
+          minimum: 0
+          maximum: 5
+        comment:
+          type: string

@@ -25,8 +25,14 @@ public class ArtistController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ArtistDto>> getAllArtists() {
-        List<ArtistDto> artists = artistRepository.findAll().stream()
+    public ResponseEntity<List<ArtistDto>> getAllArtists(
+            @RequestParam(value = "role", required = false) String role) {
+
+        List<Artist> artistEntities = (role == null || role.isBlank())
+                ? artistRepository.findAll()
+                : artistRepository.findByRoleIgnoreCase(role);
+
+        List<ArtistDto> artists = artistEntities.stream()
                 .map(artistMapper::toDto)
                 .toList();
         return ResponseEntity.ok(artists);
@@ -53,6 +59,7 @@ public class ArtistController {
 
         existingArtist.setName(artistInputDto.getName());
         existingArtist.setGenre(artistInputDto.getGenre());
+        existingArtist.setRole(artistInputDto.getRole());
         existingArtist.setBiography(artistInputDto.getBiography());
 
         Artist updatedArtist = artistRepository.save(existingArtist);

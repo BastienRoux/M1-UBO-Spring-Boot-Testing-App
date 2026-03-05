@@ -108,7 +108,8 @@ export const evaluationService = {
       rating: evaluationData.rating,
       comment: evaluationData.comment,
       movieId: evaluationData.filmId,
-      userId: evaluationData.userId // À récupérer du store auth
+      userId: evaluationData.userId,
+      userPseudo: evaluationData.userPseudo
     })
   },
 

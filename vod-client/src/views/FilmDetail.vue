@@ -231,6 +231,7 @@ async function submitEvaluation() {
     const evaluationData = {
       filmId: parseInt(film.value.id),
       userId: currentUserId.value,
+      userPseudo: authStore.user?.pseudo,
       rating: newEvaluation.value.rating,
       comment: newEvaluation.value.comment || ''
     }
@@ -261,6 +262,11 @@ function formatDate(date) {
 }
 
 function getEvaluationAuthorLabel(userId) {
+  const evaluation = evaluations.value.find(e => e.userId === userId)
+  if (evaluation?.userPseudo) {
+    return evaluation.userPseudo
+  }
+
   if (Number(userId) === currentUserId.value && authStore.user?.pseudo) {
     return authStore.user.pseudo
   }

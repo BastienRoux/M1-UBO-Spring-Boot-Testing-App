@@ -28,6 +28,9 @@ public class Artist {
     @Column(length = 1000)
     private String biography;
 
+    // Role metier (ACTOR, DIRECTOR, etc.) pour les filtres demandes.
+    private String role;
+
     // Relation Many-to-Many avec Movie (bidirectionnelle)
     @ManyToMany(mappedBy = "artists")
     private Set<Movie> movies = new HashSet<>();
