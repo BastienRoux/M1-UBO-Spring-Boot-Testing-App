@@ -106,26 +106,32 @@ async function filterByGenre() {
 }
 
 async function enrichFilmsWithAverageRating(movieList) {
-  const moviesWithRatings = await Promise.all(
-    movieList.map(async (film) => {
-      try {
-        const averageResponse = await evaluationService.getAverageRating(film.id)
-        const averageValue = Number(averageResponse.data)
+  // Fonctionnalité des évaluations temporairement désactivée
+  return movieList.map(film => ({
+    ...film,
+    averageRating: null
+  }))
+  
+  // const moviesWithRatings = await Promise.all(
+  //   movieList.map(async (film) => {
+  //     try {
+  //       const averageResponse = await evaluationService.getAverageRating(film.id)
+  //       const averageValue = Number(averageResponse.data)
 
-        return {
-          ...film,
-          averageRating: Number.isFinite(averageValue) ? averageValue.toFixed(1) : null
-        }
-      } catch {
-        return {
-          ...film,
-          averageRating: null
-        }
-      }
-    })
-  )
+  //       return {
+  //         ...film,
+  //         averageRating: Number.isFinite(averageValue) ? averageValue.toFixed(1) : null
+  //       }
+  //     } catch {
+  //       return {
+  //         ...film,
+  //         averageRating: null
+  //       }
+  //     }
+  //   })
+  // )
 
-  return moviesWithRatings
+  // return moviesWithRatings
 }
 
 async function reserveFilm(filmId) {
@@ -144,7 +150,9 @@ async function reserveFilm(filmId) {
 }
 
 function getFilmPoster(filmId) {
-  return `/api/posters/${filmId}`
+  // Utiliser des placeholders en attendant le service de posters
+  return `https://via.placeholder.com/300x450/1a1a2e/eee?text=${encodeURIComponent('Film #' + filmId)}`
+  // return `/api/posters/${filmId}`
 }
 
 function handleImageError(event) {

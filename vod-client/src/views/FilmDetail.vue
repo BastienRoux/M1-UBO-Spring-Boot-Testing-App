@@ -159,14 +159,15 @@ async function loadFilmData() {
     const filmResponse = await filmService.getFilmById(filmId)
     film.value = filmResponse.data
     
-    // Charger les évaluations (reviews)
-    try {
-      const evaluationsResponse = await evaluationService.getFilmEvaluations(filmId)
-      evaluations.value = evaluationsResponse.data || []
-    } catch (err) {
-      console.log('Pas d\'évaluations pour ce film')
-      evaluations.value = []
-    }
+    // Charger les évaluations (reviews) - Temporairement désactivé
+    // try {
+    //   const evaluationsResponse = await evaluationService.getFilmEvaluations(filmId)
+    //   evaluations.value = evaluationsResponse.data || []
+    // } catch (err) {
+    //   console.log('Pas d\'évaluations pour ce film')
+    //   evaluations.value = []
+    // }
+    evaluations.value = [] // Pas d'évaluations pour le moment
     
     if (isAuthenticated.value) {
       try {
@@ -222,35 +223,42 @@ async function cancelReservation() {
 }
 
 async function submitEvaluation() {
-  try {
-    if (!isAuthenticated.value) {
-      alert('Vous devez être connecté pour évaluer un film')
-      return
-    }
-    
-    const evaluationData = {
-      filmId: parseInt(film.value.id),
-      userId: currentUserId.value,
-      userPseudo: authStore.user?.pseudo,
-      rating: newEvaluation.value.rating,
-      comment: newEvaluation.value.comment || ''
-    }
-    
-    if (userEvaluation.value) {
-      await evaluationService.updateEvaluation(userEvaluation.value.id, evaluationData)
-    } else {
-      await evaluationService.createEvaluation(evaluationData)
-    }
-    showEvaluationForm.value = false
-    await loadFilmData()
-  } catch (err) {
-    console.error('Erreur:', err)
-    alert('Erreur: ' + (err.response?.data?.message || err.message))
-  }
+  // Fonctionnalité temporairement désactivée
+  alert('Les évaluations ne sont pas encore disponibles. Cette fonctionnalité sera ajoutée prochainement.')
+  showEvaluationForm.value = false
+  return
+  
+  // try {
+  //   if (!isAuthenticated.value) {
+  //     alert('Vous devez être connecté pour évaluer un film')
+  //     return
+  //   }
+  //   
+  //   const evaluationData = {
+  //     filmId: parseInt(film.value.id),
+  //     userId: currentUserId.value,
+  //     userPseudo: authStore.user?.pseudo,
+  //     rating: newEvaluation.value.rating,
+  //     comment: newEvaluation.value.comment || ''
+  //   }
+  //   
+  //   if (userEvaluation.value) {
+  //     await evaluationService.updateEvaluation(userEvaluation.value.id, evaluationData)
+  //   } else {
+  //     await evaluationService.createEvaluation(evaluationData)
+  //   }
+  //   showEvaluationForm.value = false
+  //   await loadFilmData()
+  // } catch (err) {
+  //   console.error('Erreur:', err)
+  //   alert('Erreur: ' + (err.response?.data?.message || err.message))
+  // }
 }
 
 function getFilmPoster(filmId) {
-  return `/api/posters/${filmId}`
+  // Utiliser des placeholders en attendant le service de posters
+  return `https://via.placeholder.com/400x600/1a1a2e/eee?text=${encodeURIComponent('Film #' + filmId)}`
+  // return `/api/posters/${filmId}`
 }
 
 function handleImageError(event) {
